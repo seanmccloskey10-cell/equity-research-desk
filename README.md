@@ -118,7 +118,7 @@ More prompts in [PROMPTS.md](PROMPTS.md).
 
 Agent: read [CLAUDE.md](CLAUDE.md) before modifying anything. Code map, extension patterns, and the non-negotiable rules (Settings tab is read-only, Anthropic calls only from `views/briefing.py`, etc.).
 
-When something breaks, [TROUBLESHOOTING.md](TROUBLESHOOTING.md) is the scan-first reference.
+**When something breaks**: [HELP.md](HELP.md) is the first stop — it has a single prompt you paste to your agent that runs a full diagnostic across Python, `.env`, keys, dashboard, and connectivity. [TROUBLESHOOTING.md](TROUBLESHOOTING.md) is the deeper reference for specific failure recipes.
 
 Everyone: [PRD.md](PRD.md) is the full spec. [APIS.md](APIS.md) is the menu of additional data sources Roula can add.
 
