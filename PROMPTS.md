@@ -78,7 +78,33 @@ Copy any line below, paste it to your Claude Code agent in VS Code, and hit Ente
 - *"The AI briefing button is greyed out — why?"*
 - *"I get a `.env.txt` error. Fix it for me."*
 
-## Extending the tool
+## Make it yours — customization prompts
+
+The tool is yours. These are three things you can ask your agent to change that will make the dashboard feel like you designed it. Each is a single-file edit, visibly different afterwards, and low-risk.
+
+### 1. Change the accent color (aesthetic)
+
+Browse <https://mobbin.com/colors/brand> and pick a brand palette you love — or just a single hex code that matches your mood. Then paste:
+
+> *"Change my dashboard's accent color to `#EF4444` (that's an example — swap in whatever hex I give you). Edit `config/theme.py`'s `COLORS['accent']` and `COLORS['accent_soft']` (pick a lighter shade of the same hue for the soft variant). Show me the diff before saving so I can see what's changing."*
+
+The accent color drives: the page-header underline on every tab, active-tab highlights, sidebar tick marks, metric-card hover borders, button outlines, link colors in the AI Brief, and the gradient on the TL;DR hero card. Anything "blue" in the current look becomes whatever you pick. Change takes effect on next page refresh.
+
+### 2. Add a "YTD %" column to the Overview table (functional)
+
+> *"Add a 'YTD %' column to the Overview table, right after the 'Day %' column. Color-code the same way — green for positive, red for negative, tabular numerics so the column lines up. The helper `_ytd_pct()` already exists in `views/overview.py` so you just need to call it for each ticker and add it to the `column_config` block. Show me the result."*
+
+Gives you "how has each stock done this year" at a glance, alongside the intraday move. Already-implemented helper → low-risk table extension.
+
+### 3. Personalize the AI Brief's tone (content)
+
+> *"Make my AI Brief more personal. At the top of `config/briefing_prompt.md`, have it open by addressing me as Roula, and in the 'Watchlist snapshot' section have it lead with my 5-stock portfolio before the broader market context (currently the other way round). Keep all the accuracy rules exactly as they are — just change the voice and the ordering. Show me the diff before saving."*
+
+The briefing template is plain markdown with no code — your agent can edit the system prompt and user prompt sections freely. Change applies the next time you click "Generate Briefing" (cached briefings stay cached; regenerate to see the new style).
+
+---
+
+## Extending the tool (bigger changes)
 
 - *"Add a new tab that shows dividend history for each stock."*
 - *"Add Alpha Vantage as a data source for earnings dates."*
