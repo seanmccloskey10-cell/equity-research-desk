@@ -1,0 +1,20 @@
+# Watchlist — edit this file to add / remove tickers.
+# Format: one entry per ticker, with optional display overrides.
+# After editing, refresh the dashboard (or say to your agent: "Refresh the data").
+
+tickers:
+  - symbol: CRDO
+    name: Credo Technology
+    note: Semiconductors — high-speed connectivity
+  - symbol: HIMS
+    name: Hims & Hers Health
+    note: Telehealth / consumer health
+  - symbol: BABA
+    name: Alibaba
+    note: Chinese tech / e-commerce ADR
+  - symbol: QQQI
+    name: NEOS Nasdaq-100 Income ETF
+    note: Covered-call income ETF
+  - symbol: IREN
+    name: Iris Energy
+    note: Bitcoin miner / renewable infra
