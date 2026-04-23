@@ -16,7 +16,7 @@ A local-first equity research dashboard. Python + Streamlit + Plotly. Runs on Ro
 
 **Roula.** Senior business professional at GE, based in Dubai. Fluent with Claude Cowork. **Not technically savvy** — she operates this tool via natural-language prompts to you. She does not type commands, edit `.env` by hand, or debug stack traces. Your job is to be the translation layer between her intent and the code.
 
-She is on **Windows 11** — see the Windows gotchas section below.
+She is on **macOS** — see the macOS gotchas section below.
 
 She does not like crypto. No crypto examples, data, or demo tickers.
 
@@ -47,12 +47,14 @@ Everything Python-related in this project goes through `python run.py <cmd>`. It
 | `python run.py setup` | Create `.venv` if missing, install `requirements.txt`, copy `.env.example` → `.env` if missing, run `setup_check.py` |
 | `python run.py start` | Start the dashboard (spawns streamlit, writes `.streamlit.pid`) |
 | `python run.py stop` | Kill the streamlit process (reads `.streamlit.pid`) |
-| `python run.py test` | Run pytest |
-| `python run.py shell` | Print the venv Python path — useful if you need to run ad-hoc Python inside the project's environment |
+| `python3 run.py test` | Run pytest |
+| `python3 run.py shell` | Print the venv Python path — useful if you need to run ad-hoc Python inside the project's environment |
 
-**Do not tell Roula to run `pip install`, `python -m venv`, or `streamlit run`.** Those are `run.py`'s job. If you need a new package, add it to `requirements.txt` and tell her to run `python run.py setup` — the deps marker will trigger a reinstall.
+**On Windows**, swap `python3` for `python` (or `py`). Everything else is identical.
 
-If Python 3.11+ or Git is missing from her machine, see the **Bootstrap** section in [README.md](README.md) — install via `winget` before reaching for `run.py`.
+**Do not tell Roula to run `pip install`, `python -m venv`, or `streamlit run`.** Those are `run.py`'s job. If you need a new package, add it to `requirements.txt` and tell her to run `python3 run.py setup` — the deps marker will trigger a reinstall.
+
+If Python 3.11+ or Git is missing from her machine, see the **Bootstrap** section in [README.md](README.md) — macOS uses `brew install python@3.11` / Xcode command-line tools; Windows uses `winget install`.
 
 ---
 
@@ -204,12 +206,24 @@ Before any of these, confirm with Roula:
 
 ---
 
-## Windows gotchas
+## macOS gotchas (Roula's machine)
 
-- **Hidden `.txt` extension.** `.env` may be saved as `.env.txt` by Notepad. [setup_check.py](setup_check.py) detects this explicitly. Fix: rename, or copy `.env.example` via CLI.
-- **Forward slashes in Python.** Use `pathlib.Path`. Never hardcode backslashes.
+- **Use `python3`, not `python`.** macOS's default `python` is either absent or points to an old Apple-supplied Python (often 3.9). All launch commands in this repo use `python3`. The venv, once created, is fine — `run.py` routes everything through `.venv/bin/python` internally.
+- **TextEdit saves rich text by default.** Never ask Roula to open `.env` in TextEdit — it'll save as `.rtf`. Edit `.env` via your own file tools; if you absolutely need a GUI editor, use VS Code (`code .env`) or `nano` in Terminal.
+- **Finder hides extensions by default.** A file that looks like `.env` in Finder might be `.env.rtf` on disk. Always verify with `ls -la` in Terminal.
+- **Xcode command-line tools.** macOS prompts to install these on first `git` use — ~5 min download. Homebrew also triggers this install. Accept it; Git + most dev tools depend on it.
+- **Homebrew is the assumed package manager.** If Roula doesn't have it, offer to install it one-time. Without Homebrew, Python install falls back to the python.org .pkg installer.
+- **`.DS_Store` files.** Auto-created by Finder, already gitignored — ignore.
+
+## Windows notes (for Sean testing, or a future Windows student)
+
+The app is cross-platform by design (see `os.name` branches in [run.py](run.py) and [scripts/stop_dashboard.py](scripts/stop_dashboard.py)). If you're setting this up on Windows instead of macOS:
+
+- **`python` instead of `python3`.** Windows Python installer creates `python.exe`, not `python3.exe`. If that fails, try `py` (Windows Python Launcher).
+- **Hidden `.txt` extension.** File Explorer hides known extensions. Notepad may save `.env` as `.env.txt`. [setup_check.py](setup_check.py) detects this explicitly.
+- **Forward slashes in Python paths.** Use `pathlib.Path` everywhere — never hardcode backslashes.
 - **`pip` not on PATH.** Fall back to `py -m pip install -r requirements.txt`.
-- **`taskkill` vs `kill`.** Handled inside [scripts/stop_dashboard.py](scripts/stop_dashboard.py) — reference that pattern if you need to kill other processes.
+- **`taskkill` vs `kill`.** Already handled inside [scripts/stop_dashboard.py](scripts/stop_dashboard.py).
 
 ## Why [.vscode/settings.json](.vscode/settings.json) is committed
 

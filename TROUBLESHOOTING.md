@@ -2,42 +2,64 @@
 
 Common problems and how to fix them. Written for Roula's Claude Code agent to scan when she describes a problem — paste the symptom into the search box here, the agent executes the fix.
 
+Roula is on **macOS**, so macOS commands are shown first. Windows equivalents are in parentheses where relevant (for Sean testing, or future Windows students).
+
 ---
 
 ## Setup
 
-### `python: command not found`
+### `python3: command not found` (macOS) or `python: command not found` (Windows)
 
-The user's Python isn't on PATH, or Python isn't installed.
+Python isn't installed, or isn't on PATH.
 
-**Fix (Windows):**
+**Fix on macOS:**
+```bash
+# Install via Homebrew (preferred):
+brew install python@3.11
+
+# If Homebrew isn't installed:
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+# Then: brew install python@3.11
+
+# No Homebrew, no Terminal install? Download the .pkg installer:
+#   https://www.python.org/downloads/
+# Double-click to run. It adds `python3` to PATH automatically.
+```
+
+**Fix on Windows:**
 ```powershell
-# Try the Python launcher instead
+# Try the Python launcher first
 py --version
-# If that works, use py everywhere instead of python:
-py run.py setup
-# If NOT installed:
+# If that works, use py everywhere instead of python.
+
+# Otherwise, install:
 winget install -e --id Python.Python.3.11
 # Restart the terminal.
 ```
 
 ### `Python 3.x.x is too old. Need Python 3.11+`
 
-`run.py` detected an older Python. Install 3.11+ via winget and re-run.
+`run.py` detected an older Python.
 
-### `.env.txt exists!` during `setup_check`
+- **macOS**: The default Python is often 3.9 (Apple-supplied). `brew install python@3.11` and restart Terminal.
+- **Windows**: `winget install -e --id Python.Python.3.11` and restart terminal.
 
-Windows hides the `.txt` extension by default, and Notepad saved `.env` as `.env.txt`.
+### `.env.rtf` exists (macOS) or `.env.txt` exists (Windows)
 
-**Fix:** delete the `.env.txt` file and re-run `python run.py setup`. `run.py` will copy `.env.example` → `.env` correctly. **Never ask the user to edit `.env` in Notepad by hand.**
+File was saved with a wrong extension because the OS/editor hid or added it.
+
+- **macOS**: TextEdit's default rich-text format. The agent should edit `.env` via its file tools, not TextEdit. If she already has a `.env.rtf`, delete it; the agent will re-copy `.env.example` → `.env` on next `python3 run.py setup`.
+- **Windows**: Notepad + Explorer's hidden-extension trap. Same fix — delete the `.env.txt` and re-run setup.
+
+**Never ask Roula to edit `.env` in any GUI text editor by hand.**
 
 ### `pip install` fails with permission error
 
-Don't run as admin. Make sure you're installing into the venv, not the system Python. `run.py` handles this — use `python run.py setup`, not a bare `pip install`.
+Don't run as admin/sudo. Make sure the install is going into the venv, not system Python. `run.py` handles this — always use `python3 run.py setup` (or `python run.py setup` on Windows), never a bare `pip install`.
 
 ### `run.py setup` runs forever / appears to hang
 
-First-run installs can take 60–90 seconds (streamlit + yfinance + plotly are large). If it exceeds 3 minutes, kill the terminal and re-run — pip may be stuck on a mirror.
+First-run installs take 60–90 seconds (streamlit + yfinance + plotly are large). If it exceeds 3 minutes, kill the terminal (Ctrl+C) and re-run — pip may be stuck on a slow mirror. Check internet connection if it happens twice.
 
 ---
 
@@ -48,7 +70,12 @@ First-run installs can take 60–90 seconds (streamlit + yfinance + plotly are l
 The `.streamlit.pid` file is stale — the process is gone but the file wasn't cleaned up.
 
 **Fix:**
-```powershell
+```bash
+# macOS:
+python3 run.py stop
+python3 run.py start
+
+# Windows:
 python run.py stop
 python run.py start
 ```
@@ -57,12 +84,26 @@ python run.py start
 
 Another app (or a leftover Streamlit process) is on the port.
 
+**Fix on macOS:**
+```bash
+# Find what's using port 8501
+lsof -i :8501
+
+# Kill it by PID (replace 12345 with actual PID)
+kill -9 12345
+
+# Restart
+python3 run.py start
+```
+
 **Fix on Windows:**
 ```powershell
 # Find what's using it
 netstat -ano | findstr :8501
+
 # Kill it by PID
 taskkill /PID <pid> /F
+
 # Restart
 python run.py start
 ```
@@ -71,12 +112,19 @@ python run.py start
 
 Usually a Python error during view render.
 
-**Fix:**
+**Fix on macOS:**
+```bash
+python3 run.py stop
+# Run streamlit in the foreground so errors surface:
+./.venv/bin/python -m streamlit run app.py
+# Read the red stack trace, fix the view file, restart:
+python3 run.py start
+```
+
+**Fix on Windows:**
 ```powershell
 python run.py stop
-# Run streamlit in the foreground so errors surface:
 .\.venv\Scripts\python.exe -m streamlit run app.py
-# Read the red stack trace, fix the view file, restart:
 python run.py start
 ```
 
@@ -84,7 +132,7 @@ python run.py start
 
 yfinance is temporarily unavailable. Not a bug. Click **Refresh** in the sidebar. If still empty after 5 min, Yahoo Finance may be throttling — try again in an hour.
 
-The Overview tab will show an explicit error banner when all tickers fail. If you see that banner, no action is needed other than waiting or checking network connectivity.
+The Overview tab shows an explicit error banner when all tickers fail. If you see that banner, no action is needed other than waiting or checking network connectivity. If Roula is on a corporate VPN (common for GE), try disconnecting and retry.
 
 ---
 
@@ -93,7 +141,11 @@ The Overview tab will show an explicit error banner when all tickers fail. If yo
 ### Added my Finnhub key but the sidebar still shows ⚪ `finnhub`
 
 Streamlit cached the "no key" state. Restart:
-```powershell
+```bash
+# macOS:
+python3 run.py stop && python3 run.py start
+
+# Windows:
 python run.py stop && python run.py start
 ```
 
@@ -142,15 +194,18 @@ Anthropic rate-limited the request. Per PRD §5.6 #8, the app does not retry aut
 
 ### Briefing generated but the cache file has weird YAML at the top
 
-That's intentional — YAML frontmatter with provenance (timestamp, model, tokens, cost). If you open `briefings/2026-04-21.md` in a plain text editor, you'll see it. When you download via the dashboard button, it's included for your records. The dashboard itself strips it before rendering.
+That's intentional — YAML frontmatter with provenance (timestamp, model, tokens, cost). If you open `briefings/2026-04-22.md` in a plain text editor, you'll see it. When you download via the dashboard button, it's included for your records. The dashboard itself strips it before rendering.
 
 ### I want to clear my usage ledger
 
 The ledger is at `briefings/.usage.jsonl`. Deleting the file resets your monthly spend to $0 — but **this is self-defeating**: the cap exists to stop you from going over by accident. Raising the cap in `.env` is almost always the right move instead.
 
 If you really want to clear it (e.g. corrupt file):
-```powershell
-# Windows
+```bash
+# macOS:
+rm briefings/.usage.jsonl
+
+# Windows:
 del briefings\.usage.jsonl
 ```
 
@@ -168,11 +223,42 @@ Some foreign tickers need a suffix: `TSLA` (US) works, but `SHOP.TO` (Shopify on
 
 ### How do I reset to the original 5-ticker list?
 
-```powershell
+```bash
 git checkout config/tickers.yaml
 # If not a git repo or no changes checked in yet, manually restore to:
 # CRDO, HIMS, BABA, QQQI, IREN (see config/tickers.yaml in the upstream repo)
 ```
+
+---
+
+## macOS specifics
+
+### Gatekeeper blocked a script
+
+Python scripts aren't subject to Gatekeeper. If you see a blocked-app dialog, you probably double-clicked something else — not a `run.py` issue.
+
+### `command not found: brew`
+
+Homebrew isn't installed. Install it:
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+After the install completes, restart Terminal so `brew` appears on PATH. Apple Silicon (M1/M2/M3) installs Homebrew at `/opt/homebrew` by default.
+
+### Xcode command-line tools prompt on first `git` use
+
+Expected. Click **Install**. ~5 min download. Git + most dev tools depend on these. If you've dismissed the prompt by accident, re-trigger with `xcode-select --install`.
+
+### VS Code `code` command not on PATH
+
+Open VS Code → Command Palette (Cmd+Shift+P) → type "Shell Command: Install 'code' command in PATH" → Enter. Restart Terminal.
+
+### Terminal shows "zsh: command not found" for python3
+
+Your shell doesn't see the new Python install. Either:
+- Restart Terminal (most common fix — PATH hasn't reloaded)
+- Or explicitly reload: `source ~/.zshrc`
+- Or invoke directly: `/opt/homebrew/bin/python3.11 run.py setup`
 
 ---
 
@@ -201,12 +287,14 @@ before running to switch the codepage to UTF-8.
 
 ## When none of the above helps
 
-1. Run `python run.py setup` — it validates the environment and reports what's off.
-2. Check the Streamlit log — run in foreground: `.\.venv\Scripts\python.exe -m streamlit run app.py`
+1. Run `python3 run.py setup` (or `python run.py setup` on Windows) — it validates the environment and reports what's off.
+2. Check the Streamlit log — run in foreground:
+   - macOS: `./.venv/bin/python -m streamlit run app.py`
+   - Windows: `.\.venv\Scripts\python.exe -m streamlit run app.py`
 3. Post the exact error message (no screenshots) to your agent. Include the last 10 lines of the stack trace.
 
 The agent should:
 - Read the traceback top-to-bottom
 - Identify the file + line number
 - Fix the root cause, not the symptom
-- Re-run tests: `python run.py test`
+- Re-run tests: `python3 run.py test` (or `python run.py test` on Windows)

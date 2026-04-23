@@ -46,8 +46,9 @@ def _check_python_version() -> None:
         print(
             f"ERROR: Python {v.major}.{v.minor}.{v.micro} is too old. "
             f"Need Python {MIN_PY[0]}.{MIN_PY[1]}+.\n"
-            "  Windows 11: winget install -e --id Python.Python.3.11\n"
-            "  Or download: https://www.python.org/downloads/"
+            "  macOS:   brew install python@3.11   (or download from https://www.python.org/downloads/)\n"
+            "  Windows: winget install -e --id Python.Python.3.11\n"
+            "  Any OS:  https://www.python.org/downloads/"
         )
         sys.exit(1)
 

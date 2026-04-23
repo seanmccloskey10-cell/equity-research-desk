@@ -7,10 +7,10 @@ Copy any line below, paste it to your Claude Code agent in VS Code, and hit Ente
 ## Getting started
 
 - *"Clone this repo and get it running for me: https://github.com/seanmccloskey10-cell/equity-research-desk"*
-  — Your agent follows README's **Bootstrap** section: checks for Python 3.11+ and Git (installs via winget if missing), clones the repo, runs `python run.py setup`, then `python run.py start`. Dashboard opens at http://localhost:8501.
+  — Your agent follows README's **Bootstrap** section: checks for Python 3.11+ and Git (installs via `brew` on macOS, or `winget` on Windows, if missing), clones the repo, runs `python3 run.py setup` (macOS) or `python run.py setup` (Windows), then the matching `start` command. Dashboard opens at http://localhost:8501.
 - *"I want to use this equity research tool — can you set it up?"*
 - *"Check if the setup is working and let me know what I need to do next."*
-  — Your agent runs `python run.py setup` and reports back.
+  — Your agent runs `python3 run.py setup` (macOS) / `python run.py setup` (Windows) and reports back.
 
 ## Using the dashboard
 

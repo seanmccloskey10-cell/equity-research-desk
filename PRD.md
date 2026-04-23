@@ -25,7 +25,7 @@ She has had ~10 Preply lessons with Sean. The last one attempted to build an equ
 
 - **She does not type commands.** She talks to her Claude Code agent in natural language.
 - **She does not know what `pip install`, `git clone`, `cd`, or `.env` mean.** Her agent handles all of that.
-- **She is on Windows 11.** All setup and error-handling guidance must account for Windows-specific traps (hidden file extensions, path separators, PowerShell vs. bash).
+- **She is on macOS.** All setup and error-handling guidance is written Mac-first (`python3`, `brew`, Homebrew-preferred install paths, TextEdit rich-text trap, Finder extension-hiding). Windows guidance is kept as a secondary aside where relevant (for Sean testing, or future Windows students).
 - **She has 5 tickers she cares about:** CRDO (Credo Technology), HIMS (Hims & Hers Health), BABA (Alibaba), QQQI (NEOS Nasdaq-100 Income ETF), IREN (Iris Energy).
 - **She has a Claude API key available** (explicitly opted-in; Sean confirmed 2026-04-21). This unlocks the AI briefing feature.
 - **She does not like crypto.** Equities only. Do not include crypto examples, crypto-adjacent features, or crypto tickers as demo data.
@@ -62,7 +62,7 @@ The build is successful if and only if:
 2. **Visible sophistication.** On first load, the dashboard *looks like* a paid product — dark theme, interactive candlestick charts, color-coded metrics, clean typography. Not a student project.
 3. **Redundancy.** If Finnhub, Alpha Vantage, or Claude API keys are missing or broken, the tool continues to work with graceful fallback to yfinance.
 4. **Extensibility.** Student can say "add TSLA to my watchlist" or "add a sector breakdown view" to her agent and the agent can do it by following documented patterns in `CLAUDE.md` — without rewriting core code.
-5. **No Windows gotchas.** Setup and error handling explicitly account for the `.env.txt` trap, PowerShell vs. bash differences, and terminal-wrong-directory issues.
+5. **No OS gotchas.** Setup and error handling account for macOS-specific traps (TextEdit rich-text default, Finder extension-hiding, `python3` vs `python`) and keep Windows gotchas documented as a secondary aside (`.env.txt` hidden-extension trap, `python` vs `py`, PowerShell vs bash).
 6. **One-command run.** After first setup, `streamlit run app.py` (executed by the agent, not the student) is the only command needed to launch.
 
 ---
@@ -149,7 +149,7 @@ Acceptance test: a malicious or buggy caller trying to call the Claude endpoint 
 
 ### 6.1 Stack
 
-- **Python 3.9+** (3.11 preferred, widely installed on Windows)
+- **Python 3.11+** (Roula's Mac may ship with 3.9 Apple-supplied — install `python@3.11` via Homebrew or python.org installer)
 - **Streamlit** — web dashboard framework
 - **Plotly** — interactive charts (candlestick, sparkline, radar)
 - **yfinance** — Yahoo Finance data (primary source, no API key)
@@ -199,8 +199,8 @@ This is where the previous lesson broke. Prevent it structurally:
 
 1. **`.env.example` is the canonical template** — checked into git, has every key documented with comments explaining what each unlocks and which tier is free
 2. **First-run setup script (`setup_check.py`)** — the student's agent runs this after install. It:
-   - Checks Python version is 3.9+
-   - Confirms `.env` file exists (not `.env.txt` — checks for the Windows hidden-extension trap explicitly and reports clearly if found)
+   - Checks Python version is 3.11+
+   - Confirms `.env` file exists (not `.env.txt` from Notepad on Windows, or `.env.rtf` from TextEdit on macOS — both traps surface clearly)
    - Validates each key if present (hits a minimal endpoint, reports success/failure with friendly message)
    - Tests yfinance with one ticker call
    - Prints a "✅ Ready to run — now say to your agent: 'Start the dashboard'" message
@@ -329,7 +329,7 @@ This file sits at the project root. When the student opens Claude Code in her cl
    - A new view / tab (create `views/<name>.py`, register in `app.py`'s tab list)
    - A new chart component (create in `components/`, import where used)
 6. **Key safety** — `.env` is gitignored, never commit keys, use `.env.example` for new keys
-7. **Windows gotchas** — forward slashes in Python, the `.env.txt` trap, PowerShell vs. bash differences
+7. **OS gotchas** — macOS (`python3` vs `python`, TextEdit rich-text default, Finder extension-hiding, Homebrew install paths) first; Windows (`.env.txt` Notepad trap, `py` launcher, PowerShell vs bash) as secondary aside
 8. **When to ask the user** — bullet list of decisions the agent should run past Roula before acting (e.g. "before changing the theme or adding a paid API key")
 9. **What not to do** — e.g. "don't hardcode API keys in source files, don't commit `.env`, don't add Anthropic calls outside the briefing module"
 
@@ -345,7 +345,7 @@ This file sits at the project root. When the student opens Claude Code in her cl
 6. Agent runs `streamlit run app.py` — dashboard opens in her browser
 7. Agent tells her: *"Your dashboard is running at http://localhost:8501. Your 5 stocks are loaded. Try saying things like 'add TSLA' or 'show me my comparison view'."*
 
-Elapsed time from clone to live dashboard: target < 3 minutes on Windows.
+Elapsed time from clone to live dashboard: target < 3 minutes on macOS (assuming Python 3.11+ and Git are already installed). Add 5-10 min if `brew install python@3.11` or Xcode command-line tools need to run first.
 
 ---
 
@@ -395,11 +395,11 @@ The PRD's promise is: once the base tool is shipped, she can say natural things 
 
 ## 12. Guardrails and failure modes
 
-### 12.1 The Windows `.env` trap (prevent the previous failure)
+### 12.1 The `.env` extension-hiding trap (prevent the previous failure)
 
-- Ship `.env.example` — student's agent copies it to `.env`, never creates one from scratch
-- `setup_check.py` explicitly tests for `.env.txt` (hidden-extension trap) and reports if found
-- README tells the student's agent: "In Windows File Explorer, the file must be named `.env` exactly — the `.txt` extension is hidden by default. Verify with `dir .env*` in the terminal."
+- Ship `.env.example` — student's agent copies it to `.env`, never creates one from scratch.
+- `setup_check.py` explicitly tests for `.env.txt` (Windows Notepad trap) and reports if found. The macOS equivalent (`.env.rtf` from TextEdit) is caught by the same "verify actual filename" discipline — the agent should `ls -la` (macOS) or `dir /A .env*` (Windows) to see real filenames rather than trust Finder/Explorer's hidden-extension display.
+- README + HELP.md tell the student's agent: never ask Roula to edit `.env` in a GUI text editor (TextEdit on Mac, Notepad on Windows). Always edit via the agent's own file tools, or `nano`/`code` from Terminal.
 
 ### 12.2 The browser CORS trap (the earlier HTML approach)
 
@@ -484,7 +484,7 @@ Each phase is shippable. The student can use the tool at the end of any phase; s
 - `setup_check.py` expanded with all API key validations
 
 ### Phase 6 — Testing + polish
-- Fresh clone test on a separate Windows folder, run through setup flow as a non-technical user
+- Fresh-clone smoke test on a separate machine (target: macOS like Roula's; Windows second-pass for Sean's own testing), run through setup flow as a non-technical user
 - Error state review (every error path has a helpful message)
 - Smoke tests committed
 

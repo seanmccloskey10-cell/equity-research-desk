@@ -35,17 +35,21 @@ That's it. Paste, send, wait for the report.
 
 ## What the agent is checking (and why)
 
+> All command examples below use macOS conventions (`python3`, `ls`, `ps`). If you're on Windows, swap `python3` → `python` (or `py`), `ls` → `dir`, `ps -p PID` → `tasklist /FI "PID eq <pid>"`.
+
 ### 1. Python + venv + dependencies
 
-- **`python --version`** must return 3.11 or newer. On Windows, `py --version` also works. If both fail, Python is missing — install via `winget install -e --id Python.Python.3.11`.
-- **`.venv/` directory** must exist in the project root. If missing: `python run.py setup`.
-- **Core deps installed**: `streamlit`, `plotly`, `yfinance`, `pandas`, `python-dotenv`, `PyYAML`, `requests`, `anthropic`, `markdown`. If any are missing, `python run.py setup` reinstalls them all.
+- **`python3 --version`** must return 3.11 or newer. (On Windows: `python --version` or `py --version`.) If it's missing, install via `brew install python@3.11` on macOS, or `winget install -e --id Python.Python.3.11` on Windows.
+- **`.venv/` directory** must exist in the project root. If missing: `python3 run.py setup`.
+- **Core deps installed**: `streamlit`, `plotly`, `yfinance`, `pandas`, `python-dotenv`, `PyYAML`, `requests`, `anthropic`, `markdown`. If any are missing, `python3 run.py setup` reinstalls them all.
 
 ### 2. `.env` file hygiene — this is what usually breaks
 
 **The failure mode that cost us a whole lesson last time was here.** Read this section carefully before accusing the code.
 
-- **File must be named exactly `.env`** — NOT `.env.txt`, NOT `env.txt`, NOT `env.`. Windows File Explorer hides the `.txt` extension by default, so a file that *looks* like `.env` in Explorer may actually be `.env.txt` on disk. Verify by running `dir /A .env*` in cmd or `ls -a | grep env` in bash.
+- **File must be named exactly `.env`** — NOT `.env.txt`, NOT `.env.rtf`, NOT `env.txt`, NOT `env.`. Two common traps:
+  - **macOS Finder hides known extensions by default.** A file that looks like `.env` in Finder might be `.env.rtf` on disk if it was saved from TextEdit. Verify with `ls -la | grep env` in Terminal — that shows the real name.
+  - **Windows File Explorer hides `.txt` by default.** Notepad silently appends `.txt` when saving a file called `.env`.
 - **File must be in the project root**, next to `app.py` and `run.py`. Not in a subfolder.
 - **Each key on its own line**, exactly like `.env.example`:
   ```
@@ -57,21 +61,26 @@ That's it. Paste, send, wait for the report.
 - **Trailing whitespace silently truncates the key**. `sk-ant-... ` (note the trailing space) will fail with a cryptic 401. Check for invisible trailing chars.
 - **Anthropic keys start with `sk-ant-`**. If yours doesn't, you pasted something else (an OpenAI key, a placeholder, the login password).
 - **Finnhub keys are lowercase alphanumeric, ~20 chars**, no prefix.
-- **After editing `.env`, the dashboard MUST be restarted** — `.env` is read once at startup. Hitting Refresh in the sidebar does NOT re-read `.env`. Run `python run.py stop && python run.py start`.
+- **Don't edit `.env` in TextEdit on Mac.** TextEdit defaults to rich-text format. Use VS Code (`code .env`) or `nano .env` in Terminal — or better, have the agent edit it directly via its file tools.
+- **After editing `.env`, the dashboard MUST be restarted** — `.env` is read once at startup. Hitting Refresh in the sidebar does NOT re-read `.env`. Run `python3 run.py stop && python3 run.py start`.
 
 ### 3. Dashboard process + port 8501
 
-- **Is the process alive?** Check for `.streamlit.pid` in the project root. If present, read the PID and verify it's running (`tasklist | findstr PID` on Windows).
-- **Is port 8501 reachable?** Open http://localhost:8501 in your browser. If "site can't be reached", the dashboard isn't running.
-- **Port conflict?** If starting the dashboard errors with "port already in use", a previous instance didn't shut down cleanly. Fix: `python run.py stop` then `python run.py start`. If stop fails, find + kill the stale python process manually.
+- **Is the process alive?** Check for `.streamlit.pid` in the project root. If present, read the PID and verify it's running:
+  - macOS/Linux: `ps -p <pid>` — exit 0 if alive, non-zero if dead. Also `kill -0 <pid>` (no actual kill, just tests).
+  - Windows: `tasklist /FI "PID eq <pid>"`.
+- **Is port 8501 reachable?** Open http://localhost:8501 in her browser (macOS: `open http://localhost:8501`). If "site can't be reached", the dashboard isn't running.
+- **Port conflict?** If starting the dashboard errors with "port already in use", a previous instance didn't shut down cleanly. Fix: `python3 run.py stop` then `python3 run.py start`. If stop fails, find + kill the stale python process manually:
+  - macOS: `lsof -i :8501` to find the PID, then `kill -9 <pid>`.
+  - Windows: `netstat -ano | findstr :8501`, then `taskkill /PID <pid> /F`.
 
 ### 4. yfinance live connectivity
 
-- **Live smoke test**: `python setup_check.py` step 4 hits yfinance for AAPL and reports OK or FAIL.
+- **Live smoke test**: `python3 setup_check.py` step 4 hits yfinance for AAPL and reports OK or FAIL.
 - **Rate limits**: yfinance occasionally rate-limits bursts of requests. If prices show as `—` across the whole watchlist, wait 60 seconds and click Refresh.
-- **Corporate network / VPN**: some networks block the Yahoo endpoint. If you're on a VPN, toggle it off and retry.
+- **Corporate network / VPN**: some networks block the Yahoo endpoint. If she's on a corporate VPN (common for GE employees), try toggling it off and retry.
 
-### 5. `python run.py setup` output
+### 5. `python3 run.py setup` output
 
 This command runs the full `setup_check.py` validation in six steps. The agent should paste the complete output into the report. Any step that logs `[FAIL]` or `[WARN]` points straight at the problem.
 
@@ -79,19 +88,21 @@ This command runs the full `setup_check.py` validation in six steps. The agent s
 
 ## Symptom → most likely cause → fix (quick reference)
 
-| Symptom | Most likely cause | Fix |
+| Symptom | Most likely cause | Fix (macOS — swap `python3` → `python` on Windows) |
 |---|---|---|
-| Dashboard won't start | Venv missing OR port conflict | `python run.py setup`, then `python run.py start` |
+| Dashboard won't start | Venv missing OR port conflict | `python3 run.py setup`, then `python3 run.py start` |
 | All prices show `—` | yfinance rate-limited or offline | Wait 60s, click Refresh |
-| AI Briefing tab says "no key" despite adding one | `.env` was saved as `.env.txt` | Rename file; restart dashboard |
-| AI Briefing tab says "no key" and file is correctly named | Dashboard wasn't restarted after key added | `python run.py stop && python run.py start` |
-| "Port 8501 already in use" when starting | Previous dashboard instance still running | `python run.py stop` first |
+| AI Briefing tab says "no key" despite adding one | `.env` was saved as `.env.rtf` (Mac) or `.env.txt` (Windows) | Rename file; restart dashboard |
+| AI Briefing tab says "no key" and file is correctly named | Dashboard wasn't restarted after key added | `python3 run.py stop && python3 run.py start` |
+| "Port 8501 already in use" when starting | Previous dashboard instance still running | `python3 run.py stop` first — or find the PID with `lsof -i :8501` (Mac) / `netstat -ano \| findstr :8501` (Windows) and kill manually |
 | News tab says "No recent articles" | No Finnhub key, or Finnhub rate limit hit | Check `.env`; free tier is 60 req/min |
 | Earnings tab empty | Same as news — needs Finnhub key | Add `FINNHUB_API_KEY` to `.env` |
 | "Anthropic call failed: 401" | Key is wrong format (quoted, trailing space, or not `sk-ant-`) | Re-check `.env` formatting rules above |
 | "Anthropic call failed: 429" | Rate-limited | Wait 5-10 minutes; the app won't auto-retry |
 | AI Brief button disabled, budget shows $X / $Y | Monthly cap hit | Either wait until 1st of next month, OR ask agent to raise `ANTHROPIC_MONTHLY_BUDGET_USD` in `.env` |
-| Sidebar says "NYSE Closed" but it's a weekday afternoon | Your machine clock is in a different timezone | Market session is read from your system time — correct the clock |
+| Sidebar says "NYSE Closed" but it's a weekday afternoon | Your machine clock is in a different timezone | Market session is read from system time. On Mac: System Settings → General → Date & Time. |
+| `python3: command not found` on Mac | Python isn't installed | `brew install python@3.11` (or python.org installer) |
+| `python: command not found` on Windows | Python isn't installed | `winget install -e --id Python.Python.3.11` |
 
 ---
 
@@ -107,7 +118,7 @@ If all of that is true, the tool is healthy — whatever problem you think you h
 
 ## Still broken after the diagnostic?
 
-1. **Paste the full output of `python run.py setup`** to your agent and ask it to interpret. The six-step report pinpoints 90% of setup issues.
+1. **Paste the full output of `python3 run.py setup`** (on Windows: `python run.py setup`) to your agent and ask it to interpret. The six-step report pinpoints 90% of setup issues.
 2. **Check [TROUBLESHOOTING.md](TROUBLESHOOTING.md)** — the deeper catalogue of failure modes with specific recipes.
-3. **Nuclear option**: ask the agent to delete `.venv/` and run `python run.py setup` from scratch. This forces a clean dependency reinstall and catches corruption from interrupted installs.
+3. **Nuclear option**: ask the agent to delete `.venv/` and re-run `python3 run.py setup` from scratch. This forces a clean dependency reinstall and catches corruption from interrupted installs.
 4. **Last resort**: message Sean. Include the full diagnostic report the agent produced + a screenshot of whatever isn't working.

@@ -18,44 +18,60 @@ A local-first equity research dashboard — Python + Streamlit + Plotly, powered
 
 ## Bootstrap — for an agent setting this up on a fresh machine
 
-The user is non-technical. Do not ask her to install anything manually. If a prerequisite is missing, install it yourself (with her one-time consent for each `winget` command). Work through these steps **in order**. Stop and ask her for help **only** if all automated paths fail.
+The user (Roula) is non-technical and on **macOS**. Do not ask her to install anything manually. If a prerequisite is missing, install it yourself (with her one-time consent per install command). Work through these steps **in order**. Stop and ask her for help **only** if all automated paths fail.
+
+> **If you're running this on Windows** (e.g. Sean testing from his dev machine), swap `python3` for `python` (or `py`), and use `winget` in place of `brew`. Specific Windows equivalents are listed in the "Windows notes" section below.
 
 ### Step 1 — Verify / install Python 3.11+
 
-```powershell
-# Windows 11 — check first:
-python --version      # or: py --version
+macOS ships with an older Apple-supplied Python; you need 3.11 or newer.
 
-# If missing, install via winget (Windows 11 has winget by default):
-winget install -e --id Python.Python.3.11
+```bash
+# Check first — macOS should have python3 as a command:
+python3 --version
 
-# Then restart the terminal so PATH picks up the new python.
+# If missing, or version is < 3.11, prefer Homebrew:
+brew --version       # check if Homebrew is installed
+
+# If Homebrew is installed:
+brew install python@3.11
+
+# If Homebrew is NOT installed, install it first:
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+# Then: brew install python@3.11
+
+# Fallback (no Homebrew, GUI installer): download from https://www.python.org/downloads/
+# Pick 3.11 or 3.12, run the .pkg installer. It adds `python3` to PATH automatically.
 ```
 
-If `winget` itself is missing (rare on Windows 11): install from <https://www.python.org/downloads/> — pick 3.11 or 3.12, tick **"Add Python to PATH"** at the top of the installer.
+After install, restart the Terminal so PATH picks up the new `python3`.
 
 ### Step 2 — Verify / install Git
 
-```powershell
+macOS doesn't ship Git by default but triggers an install prompt the first time you run `git`.
+
+```bash
 git --version
+# If Git is missing, macOS pops up a dialog: "The git command requires the command line developer tools."
+# Click Install. Takes ~5 minutes.
 
-# If missing:
-winget install -e --id Git.Git
+# Alternatively, if Homebrew is available:
+brew install git
 ```
-
-Fallback: <https://git-scm.com/download/win>.
 
 ### Step 3 — Clone the repo
 
-```powershell
+```bash
+# Clone into her Projects folder (create if missing)
+mkdir -p ~/Projects && cd ~/Projects
 git clone https://github.com/seanmccloskey10-cell/equity-research-desk
 cd equity-research-desk
 ```
 
 ### Step 4 — One-command setup
 
-```powershell
-python run.py setup
+```bash
+python3 run.py setup
 ```
 
 That's it. `run.py` handles:
@@ -67,16 +83,16 @@ That's it. `run.py` handles:
 
 ### Step 5 — Start the dashboard
 
-```powershell
-python run.py start
+```bash
+python3 run.py start
 ```
 
-Open <http://localhost:8501> in her browser. Tell her the dashboard is running.
+Open <http://localhost:8501> in her browser (macOS: `open http://localhost:8501` opens the default browser). Tell her the dashboard is running.
 
 ### Step 6 — Stop the dashboard (later)
 
-```powershell
-python run.py stop
+```bash
+python3 run.py stop
 ```
 
 ---
@@ -85,32 +101,54 @@ python run.py stop
 
 Everything routes through `run.py` so the agent never has to remember venv paths.
 
-| User says | Agent runs |
-|---|---|
-| "Start the dashboard" | `python run.py start` |
-| "Stop the dashboard" | `python run.py stop` |
-| "Refresh the data" | Click the sidebar refresh button; OR `python run.py stop && python run.py start` |
-| "Check if setup is working" | `python run.py setup` |
-| "Run the tests" | `python run.py test` |
-| "Add TSLA to my watchlist" | Append to [config/tickers.yaml](config/tickers.yaml) under `tickers:`, then tell user to hit Refresh |
-| "Remove X from my watchlist" | Remove from [config/tickers.yaml](config/tickers.yaml) |
-| "Help me add my Finnhub key" | Open `.env`, set `FINNHUB_API_KEY=<value>`; `python run.py setup` to verify |
+| User says | Agent runs (macOS) | Agent runs (Windows) |
+|---|---|---|
+| "Start the dashboard" | `python3 run.py start` | `python run.py start` |
+| "Stop the dashboard" | `python3 run.py stop` | `python run.py stop` |
+| "Refresh the data" | Click the sidebar refresh button; OR stop + start | (same) |
+| "Check if setup is working" | `python3 run.py setup` | `python run.py setup` |
+| "Run the tests" | `python3 run.py test` | `python run.py test` |
+| "Add TSLA to my watchlist" | Append to [config/tickers.yaml](config/tickers.yaml) under `tickers:`, then tell user to hit Refresh | (same) |
+| "Remove X from my watchlist" | Remove from [config/tickers.yaml](config/tickers.yaml) | (same) |
+| "Help me add my Finnhub key" | Edit `.env`, set `FINNHUB_API_KEY=<value>`, then restart dashboard | (same) |
 
 More prompts in [PROMPTS.md](PROMPTS.md).
 
 ---
 
-## Windows traps (Roula is on Windows 11 — read this)
+## macOS notes — read before first setup
 
-1. **Hidden `.txt` extension.** File Explorer hides known extensions. If she creates `.env` in Notepad, Windows may save it as `.env.txt`. `setup_check.py` detects this. Fix: have the agent copy `.env.example` → `.env` via the CLI (`copy .env.example .env`) so she never sees the trap.
+1. **Use `python3`, not `python`.** On macOS, `python` either doesn't exist or points to an old Apple-supplied Python 2/3.9. All commands in this repo use `python3` on macOS.
 
-2. **Forward slashes only in Python paths.** The code uses `pathlib.Path` everywhere; agents extending the code must do the same.
+2. **TextEdit's rich-text default.** If the agent needs to edit `.env` by hand, don't open it in TextEdit — by default TextEdit saves `.rtf`, not plain text. Use VS Code (`code .env`) or `nano .env` in Terminal instead. Better: the agent should edit `.env` directly via its file-editing tools, never hand-off to Roula.
 
-3. **PowerShell vs bash.** She may have either terminal open. All project commands route through `python run.py <cmd>`, which works identically in both.
+3. **Finder extension-hiding.** macOS Finder hides file extensions by default for recognised types. A file that looks like `.env` in Finder might actually be `.env.rtf` on disk. Verify in Terminal with `ls -la` — it shows the real name.
 
-4. **`pip` not on PATH.** Don't call `pip` directly. `run.py` uses `.venv/Scripts/python.exe -m pip`, which always works.
+4. **Homebrew is the default package manager.** Most open-source Mac tools assume Homebrew is installed. If Roula doesn't have it, install it (step 1) — it's a one-time setup that makes every future install trivial.
 
-5. **`python` vs `py`.** If `python --version` fails but `py --version` works, use `py run.py ...`. This happens when Python was installed via the Microsoft Store; the `py` launcher is installed alongside standard Python installers.
+5. **`.DS_Store` files.** macOS Finder sprinkles these everywhere. `.gitignore` already excludes them — nothing to worry about.
+
+6. **First-run Gatekeeper prompt.** Python scripts don't trigger Gatekeeper (the unsigned-binary blocker), so this isn't a concern here. Relevant only if installing downloaded apps.
+
+---
+
+## Windows notes (for Sean testing, or future Windows students)
+
+If you're running this on Windows instead of macOS:
+
+1. **Command swap.** Use `python` (or `py`) instead of `python3`. The `run.py` wrapper handles cross-platform venv paths internally; only the launching command differs.
+
+2. **Python install.** `winget install -e --id Python.Python.3.11` (Windows 11 has `winget` by default). Fallback: <https://www.python.org/downloads/> — tick **"Add Python to PATH"** at the top of the installer.
+
+3. **Git install.** `winget install -e --id Git.Git`. Fallback: <https://git-scm.com/download/win>.
+
+4. **Hidden `.txt` extension.** File Explorer hides known extensions. If `.env` is ever opened in Notepad, Windows may save it as `.env.txt`. `setup_check.py` detects this trap. Fix: agent uses `copy .env.example .env` via the CLI so the file is never Notepad-mangled.
+
+5. **`pip` not on PATH.** Don't call `pip` directly. `run.py` uses `.venv/Scripts/python.exe -m pip`, which always works.
+
+6. **`python` vs `py`.** If `python --version` fails but `py --version` works, use `py run.py ...` — happens when Python was installed via the Microsoft Store; the `py` launcher ships with standard Python installers.
+
+7. **PowerShell vs cmd vs bash.** All project commands route through `python run.py <cmd>`, which works identically in any terminal.
 
 ---
 
