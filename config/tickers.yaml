@@ -1,0 +1,24 @@
+# Watchlist — edit this file to add / remove tickers.
+# Format: one entry per ticker, with optional display overrides.
+# After editing, refresh the dashboard (or say to your agent: "Refresh the data").
+#
+# This template ships with a starter watchlist of well-known stocks so the
+# dashboard looks alive on first run. Swap in your own the same way — symbol,
+# name, and an optional one-line note. (Or say: "Replace these with my stocks.")
+
+tickers:
+  - symbol: NVDA
+    name: NVIDIA
+    note: Semiconductors — AI / accelerated computing
+  - symbol: AAPL
+    name: Apple
+    note: Consumer hardware + services
+  - symbol: MSFT
+    name: Microsoft
+    note: Software / cloud (Azure)
+  - symbol: GOOGL
+    name: Alphabet
+    note: Search / ads / cloud
+  - symbol: TSLA
+    name: Tesla
+    note: EVs / energy / autonomy

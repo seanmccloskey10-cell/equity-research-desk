@@ -1,0 +1,12 @@
+// Workspace settings for the Equity Research Desk.
+//
+// We handle .env loading inside Python via python-dotenv (see
+// config/settings.py). Telling VS Code NOT to also inject .env vars into
+// every terminal keeps behavior consistent between VS Code and plain
+// PowerShell/cmd, and keeps secrets (e.g. ANTHROPIC_API_KEY) scoped to
+// the Python process instead of every shell command.
+{
+    "python.envFile": "",
+    "python.terminal.useEnvFile": false,
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe"
+}
